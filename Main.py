@@ -137,11 +137,14 @@ class CategoriesAndCards:
 
 class Profiles:
     """
-    create/delete/copy/rename/switch Profile
+    Just load a profile.
+    Probably will just create a folder with .json files that contains all the categories and the cards
+    and the name of this file is the profile name.
     """
-
 
 class GUI:
     """
     Interface
     """
+
+
