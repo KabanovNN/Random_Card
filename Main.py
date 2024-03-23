@@ -22,7 +22,7 @@ class Card_Game:
     def rename_category:
 
 # categories functions end
-# cards start
+# cards start.
 
     def add_card:
 
