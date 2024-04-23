@@ -5,10 +5,25 @@ from PyQt5.QtWidgets import QMenu, QAction
 from PyQt5.QtGui import QIcon
 
 
-
-
 class Data:
+    # Very basic functionality!!
+    # Currently without demanding the right input.
+    # Without handling the case when card and category have the same name. And other things
+    """
+    Everything that relates to managing data. Stores in json.
+    Create/delete/rename/copy/cut Folders and Categories.
+    Create/delete/copy/change Cards.
+    Create a pool. Get random card.
+    """
+
     def __init__(self, filename):
+        # Start position. We always start from Main folder.
+        # Navigation system. Keeping info about current object. Path.
+
+        self.pool = {} # All cards
+        self.categories_in_pool = [] # (forUI) Categories to show in first window(main_menu)
+
+
         self.filename = filename
         self.data = self.load_data()
         self.main_menu = self.data['Main']  # For button Main_Menu and what to show at the start
@@ -18,6 +33,7 @@ class Data:
         self.update_content()
 
     def load_data(self):
+        # Loading json. Creating if does not exist.
         try:
             with open(self.filename, 'r') as file:
                 return json.load(file)
@@ -44,9 +60,10 @@ class Data:
             self.save_data()
 
     def create_category(self, name):
-        # Create category
+        # Create category. Difference between category and folder - can not create folder in category.
+        # If card created in category it acquires category's name.
         self.current_object['content'][name] = {
-            'name': name,
+            'name': self.current_object['name']+'_'+name,
             'type': 'category',
             'content': {}
         }
@@ -54,12 +71,14 @@ class Data:
         self.save_data()
 
     def create_card(self, name, chance, description):
-        # Create card
+        # Create card.
+        # Set name, chance and description.
+        # Chance. If we set 20 it means 20%, converted to 0.2
         self.current_object['content'][name] = {
             'name': name,
             'category': name if self.current_object['type'] == 'folder' else self.current_object['name'],
             'type': 'card',
-            'chance': chance,
+            'chance': int(chance)/100,
             'description': description
         }
         self.update_content()  # Update window and content
@@ -78,18 +97,40 @@ class Data:
             self.update_content()
 
     def update_content(self):
+        # Update info about current object
         current = self.data
         for step in self.current_path:
             current = current[step]
         self.current_object = current
 
     def delete_object(self, name):
+        # Delete object
         if name in self.current_object['content']:
             del self.current_object['content'][name]
             self.save_data()
 
+    def remove_all(self):
+        # Clear the pool
+        self.pool = []
+
+    def add_to_pool(self, name):
+        # Add object to pool.
+        # If category added to pool, all the card in this category will be added to pool
+        object_we_add = self.current_object['content']['name']
+        if object_we_add['type'] == 'card':
+            self.pool.append(object_we_add)
+            self.categories_in_pool.append(object_we_add['name'])
+        elif object_we_add['type'] =='category':
+            self.pool.append(object_we_add['content'])
+            self.categories_in_pool.append(object_we_add['name'])
+        else:
+            # Pull out and add all the categories and cards
+            # Probably recursive function
+
+
 
 class CreateDialog(QtWidgets.QDialog):
+    # Creating small menu for name input and saving.
     def __init__(self, parent=None):
         super(CreateDialog, self).__init__(parent)
         self.setWindowTitle("Create")
@@ -107,6 +148,8 @@ class CreateDialog(QtWidgets.QDialog):
 
 
 class Create_Card_Dialog(QtWidgets.QDialog):
+    # Creating small window for name, chance and description input for cards.
+    # Gonna change it later so everything will be in a single window
     def __init__(self, parent=None):
         super(Create_Card_Dialog, self).__init__(parent)
         self.setWindowTitle("Create")
@@ -132,6 +175,10 @@ class Create_Card_Dialog(QtWidgets.QDialog):
 
 
 class Folders_UI(object):
+    """
+    GUI for managing folders.
+    Right now very basic things. Only navigation, creating and deleting.
+    """
     def __init__(self, data):
         self.data = data
 
@@ -432,10 +479,9 @@ class MainWindow(object):
             column = i % 4
             test_button = QtWidgets.QPushButton(str(i))
             test_button.setObjectName(str(i))
-            test_button.setMinimumSize(50, 70)
+            test_button.setMinimumSize(100, 100)
             test_button.setMaximumSize(80, 100)
-            self.gridLayout_2.addWidget(test_button)
-
+            self.gridLayout_2.addWidget(test_button, row, column)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
